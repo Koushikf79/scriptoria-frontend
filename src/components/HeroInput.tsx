@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Film, Loader2, Sparkles } from 'lucide-react';
+import { ChangeEvent, useState } from 'react';
+import { Film, Loader2, Paperclip, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { SAMPLE_SCREENPLAY } from '@/lib/mock-data';
@@ -11,6 +11,58 @@ interface HeroInputProps {
 
 export default function HeroInput({ onAnalyze, loading }: HeroInputProps) {
   const [script, setScript] = useState('');
+  const [attachmentName, setAttachmentName] = useState('');
+  const [readingAttachment, setReadingAttachment] = useState(false);
+
+  const extractPdfText = async (file: File) => {
+    const [{ getDocument, GlobalWorkerOptions }, workerSrc] = await Promise.all([
+      import('pdfjs-dist'),
+      import('pdfjs-dist/build/pdf.worker.min.mjs?url'),
+    ]);
+
+    GlobalWorkerOptions.workerSrc = workerSrc.default;
+
+    const data = new Uint8Array(await file.arrayBuffer());
+    const pdf = await getDocument({ data }).promise;
+    const pages: string[] = [];
+
+    for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber++) {
+      const page = await pdf.getPage(pageNumber);
+      const textContent = await page.getTextContent();
+      const pageText = textContent.items
+        .map((item: any) => ('str' in item ? item.str : ''))
+        .join(' ')
+        .trim();
+
+      if (pageText) pages.push(pageText);
+    }
+
+    return pages.join('\n\n');
+  };
+
+  const handleAttachment = async (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setReadingAttachment(true);
+
+    try {
+      const isPdf = file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf');
+      const content = isPdf ? await extractPdfText(file) : await file.text();
+
+      if (!content.trim()) {
+        throw new Error('Empty content');
+      }
+
+      setScript(content);
+      setAttachmentName(file.name);
+    } catch {
+      setAttachmentName('Unable to read file');
+    } finally {
+      setReadingAttachment(false);
+      event.target.value = '';
+    }
+  };
 
   return (
     <div className="min-h-[calc(100vh-5rem)] flex flex-col items-center justify-center gap-8 animate-fade-in">
@@ -39,11 +91,11 @@ export default function HeroInput({ onAnalyze, loading }: HeroInputProps) {
           />
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 flex-wrap">
           <Button
             size="lg"
             onClick={() => onAnalyze(script)}
-            disabled={!script.trim() || loading}
+            disabled={!script.trim() || loading || readingAttachment}
             className="gap-2 gold-glow"
           >
             {loading ? (
@@ -57,10 +109,27 @@ export default function HeroInput({ onAnalyze, loading }: HeroInputProps) {
           <Button
             variant="outline"
             onClick={() => setScript(SAMPLE_SCREENPLAY)}
-            disabled={loading}
+            disabled={loading || readingAttachment}
           >
             Load Sample Script
           </Button>
+
+          <Button variant="outline" asChild disabled={loading || readingAttachment}>
+            <label className="cursor-pointer gap-2 inline-flex items-center">
+              <Paperclip className="h-4 w-4" />
+              {readingAttachment ? 'Reading File...' : 'Attach File'}
+              <input
+                type="file"
+                accept=".txt,.md,.fountain,.screenplay,.json,.pdf,text/plain,text/markdown,application/json,application/pdf"
+                className="hidden"
+                onChange={handleAttachment}
+              />
+            </label>
+          </Button>
+
+          {attachmentName && (
+            <p className="text-xs text-muted-foreground">Attached: {attachmentName}</p>
+          )}
         </div>
       </div>
     </div>
