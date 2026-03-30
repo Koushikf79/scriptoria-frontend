@@ -17,12 +17,15 @@ export interface AnalysisCallbacks {
 // Get WebSocket URL from environment or construct it
 const getWebSocketUrl = (): string => {
   ensureApiConfigured('getWebSocketUrl');
-  const token = localStorage.getItem('token') ?? localStorage.getItem('scriptoria_token');
-  const safeToken = token || 'test123';
-  const wsBaseUrl = (API || WS_API).replace(/^https/, 'wss').replace(/^http/, 'ws');
-  const wsUrl = `${wsBaseUrl}/ws/analyze?token=${encodeURIComponent(safeToken)}`;
+  const token = localStorage.getItem('scriptoria_token') ?? localStorage.getItem('token');
+  if (!token) {
+    throw new Error('Missing auth token. Please login again.');
+  }
 
-  console.log('WebSocket Token:', safeToken);
+  const wsBaseUrl = (API || WS_API).replace(/^https/, 'wss').replace(/^http/, 'ws');
+  const wsUrl = `${wsBaseUrl}/ws/analyze?token=${encodeURIComponent(token)}`;
+
+  console.log('WebSocket Token:', token);
   console.log('WebSocket URL:', wsUrl);
 
   return wsUrl;
@@ -37,7 +40,14 @@ export function runAnalysis(
   market: 'TOLLYWOOD' | 'BOLLYWOOD' | 'HOLLYWOOD' | 'KOREAN' | 'GENERAL',
   callbacks: AnalysisCallbacks
 ): () => void {
-  const wsUrl = getWebSocketUrl();
+  let wsUrl = '';
+  try {
+    wsUrl = getWebSocketUrl();
+  } catch (error: any) {
+    callbacks.onError(error?.message || 'Missing authentication token for analysis.');
+    return () => {};
+  }
+
   console.log('[Scriptoria] Connecting to WebSocket:', wsUrl);
 
   const ws = new WebSocket(wsUrl);

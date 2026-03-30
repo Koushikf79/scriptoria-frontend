@@ -2,6 +2,7 @@ import { createContext, ReactNode, useContext, useEffect, useMemo, useState } fr
 import { AuthResponse, UserProfile } from '@/lib/types';
 
 const TOKEN_KEY = 'scriptoria_token';
+const LEGACY_TOKEN_KEY = 'token';
 const USER_KEY = 'scriptoria_user';
 const EXPIRY_KEY = 'scriptoria_token_expiry';
 
@@ -33,6 +34,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setToken(null);
     setUserState(null);
     localStorage.removeItem(TOKEN_KEY);
+    localStorage.removeItem(LEGACY_TOKEN_KEY);
     localStorage.removeItem(USER_KEY);
     localStorage.removeItem(EXPIRY_KEY);
   };
@@ -51,6 +53,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUserState(profile);
 
     localStorage.setItem(TOKEN_KEY, data.token);
+    localStorage.setItem(LEGACY_TOKEN_KEY, data.token);
     localStorage.setItem(USER_KEY, JSON.stringify(profile));
     localStorage.setItem(EXPIRY_KEY, String(expiryAt));
   };
@@ -61,7 +64,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   useEffect(() => {
-    const storedToken = localStorage.getItem(TOKEN_KEY);
+    const storedToken = localStorage.getItem(TOKEN_KEY) ?? localStorage.getItem(LEGACY_TOKEN_KEY);
     const storedUser = parseStoredUser(localStorage.getItem(USER_KEY));
     const expiryRaw = localStorage.getItem(EXPIRY_KEY);
     const expiry = Number(expiryRaw);
@@ -72,6 +75,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     setToken(storedToken);
+    localStorage.setItem(TOKEN_KEY, storedToken);
+    localStorage.setItem(LEGACY_TOKEN_KEY, storedToken);
     setUserState(storedUser);
   }, []);
 
