@@ -34,7 +34,7 @@ export default function Login() {
     if (!API) {
       console.error('API Error: VITE_API_URL is undefined');
       setApiProbeOk(false);
-      setApiProbeMessage('Backend URL is missing. Set VITE_API_URL (e.g., http://localhost:8080).');
+      setApiProbeMessage('Backend URL is missing. Set VITE_API_URL (e.g., https://scriptoria-backend-yc6g.onrender.com).');
       return;
     }
 
