@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import ScriptoriaLayout from '@/components/ScriptoriaLayout';
 import HeroInput from '@/components/HeroInput';
 import DashboardPanel from '@/components/DashboardPanel';
@@ -10,6 +11,7 @@ import { AnalysisResult, SceneData, ScriptAnalysisResponse, EmotionAnalysisRespo
 import { runAnalysis } from '@/lib/analysis-socket';
 import { useToast } from '@/hooks/use-toast';
 import { API } from '@/config';
+import { useAuth } from '@/store/authStore';
 
 interface ProgressState {
   stage: string;
@@ -34,6 +36,8 @@ const normalizeBudgetMarket = (value: string): 'telugu' | 'bollywood' | 'hollywo
 };
 
 const Index = () => {
+  const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
   const [activeTab, setActiveTab] = useState('dashboard');
   const [analysis, setAnalysis] = useState<AnalysisResult | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -51,6 +55,15 @@ const Index = () => {
   const budgetDataRef = useRef<BudgetSimulationResponse | null>(null);
 
   const handleAnalyze = (script: string) => {
+    const token = localStorage.getItem('scriptoria_token') ?? localStorage.getItem('token');
+    if (!isAuthenticated || !token) {
+      const message = 'Please login to run analysis.';
+      setError(message);
+      toast({ title: 'Authentication required', description: message, variant: 'destructive' });
+      navigate('/login');
+      return;
+    }
+
     if (!API) {
       const message = 'API URL is missing. Set VITE_API_URL before running analysis.';
       console.error('API Error:', message);

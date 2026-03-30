@@ -56,9 +56,23 @@ export default function ScriptoriaLayout({ children, activeTab, onTabChange, has
               </button>
             </div>
           ) : (
-            <p className="hidden md:block text-xs text-muted-foreground tracking-widest uppercase">
-              AI Pre-Production Intelligence
-            </p>
+            <div className="flex items-center gap-2">
+              <p className="hidden md:block text-xs text-muted-foreground tracking-widest uppercase mr-2">
+                AI Pre-Production Intelligence
+              </p>
+              <button
+                onClick={() => navigate('/login')}
+                className="text-xs md:text-sm rounded-md border border-primary/40 px-3 py-1.5 text-primary hover:bg-primary/10 transition-all"
+              >
+                Login
+              </button>
+              <button
+                onClick={() => navigate('/register')}
+                className="text-xs md:text-sm rounded-md bg-primary/20 border border-primary/40 px-3 py-1.5 text-primary hover:bg-primary/30 transition-all"
+              >
+                Register
+              </button>
+            </div>
           )}
         </div>
       </header>
