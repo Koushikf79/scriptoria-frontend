@@ -3,7 +3,7 @@ import {
   EmotionAnalysisResponse,
   BudgetSimulationResponse,
 } from './types';
-import { API_V1, WS_API, ensureApiConfigured } from '@/config';
+import { API, API_V1, WS_API, ensureApiConfigured } from '@/config';
 
 export interface AnalysisCallbacks {
   onProgress: (stage: string, percentage: number, message: string) => void;
@@ -17,9 +17,15 @@ export interface AnalysisCallbacks {
 // Get WebSocket URL from environment or construct it
 const getWebSocketUrl = (): string => {
   ensureApiConfigured('getWebSocketUrl');
-  const token = localStorage.getItem('scriptoria_token') || '';
-  const searchParams = new URLSearchParams({ token });
-  return `${WS_API}/ws/analyze?${searchParams.toString()}`;
+  const token = localStorage.getItem('token') ?? localStorage.getItem('scriptoria_token');
+  const safeToken = token || 'test123';
+  const wsBaseUrl = (API || WS_API).replace(/^https/, 'wss').replace(/^http/, 'ws');
+  const wsUrl = `${wsBaseUrl}/ws/analyze?token=${encodeURIComponent(safeToken)}`;
+
+  console.log('WebSocket Token:', safeToken);
+  console.log('WebSocket URL:', wsUrl);
+
+  return wsUrl;
 };
 
 /**
@@ -33,7 +39,7 @@ export function runAnalysis(
 ): () => void {
   const wsUrl = getWebSocketUrl();
   console.log('[Scriptoria] Connecting to WebSocket:', wsUrl);
-  
+
   const ws = new WebSocket(wsUrl);
 
   const cleanup = () => {
@@ -43,11 +49,12 @@ export function runAnalysis(
   };
 
   ws.onopen = () => {
-    console.log('[Scriptoria] WebSocket connected');
+    console.log('WebSocket connected');
     ws.send(JSON.stringify({ screenplay, market }));
   };
 
   ws.onmessage = (event) => {
+    console.log('Message:', event.data);
     try {
       const msg = JSON.parse(event.data);
       console.log('[Scriptoria] WebSocket message:', msg.type);
@@ -84,13 +91,13 @@ export function runAnalysis(
   };
 
   ws.onerror = (event) => {
-    console.error('[Scriptoria] WebSocket error:', event);
+    console.error('WebSocket error:', event);
     callbacks.onError('Failed to connect to analysis service. Check VITE_API_URL and backend availability.');
     cleanup();
   };
 
   ws.onclose = () => {
-    console.log('[Scriptoria] WebSocket closed');
+    console.log('WebSocket closed');
   };
 
   return cleanup;
