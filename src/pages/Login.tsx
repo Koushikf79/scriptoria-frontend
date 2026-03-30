@@ -37,44 +37,9 @@ export default function Login() {
       setApiProbeMessage('Backend URL is missing. Set VITE_API_URL (e.g., https://scriptoria-backend-yc6g.onrender.com).');
       return;
     }
-
-    fetch(`${API}/api/v1/auth/me`, {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    })
-      .then(async (res) => {
-        const bodyText = await res.text();
-        let parsed: unknown = bodyText;
-
-        try {
-          parsed = bodyText ? JSON.parse(bodyText) : null;
-        } catch {
-          // Keep text payload when response is not JSON
-        }
-
-        console.log('API Data:', {
-          url: `${API}/api/v1/auth/me`,
-          status: res.status,
-          body: parsed,
-        });
-
-        // 2xx or 401 both confirm backend is reachable.
-        if (res.ok || res.status === 401) {
-          setApiProbeOk(true);
-          setApiProbeMessage('Backend reachable. API calls should appear in Network > Fetch/XHR.');
-          return;
-        }
-
-        setApiProbeOk(false);
-        setApiProbeMessage(`Backend responded with status ${res.status}. Check server routes/CORS.`);
-      })
-      .catch((err) => {
-        console.error('API Error:', err);
-        setApiProbeOk(false);
-        setApiProbeMessage('Unable to reach backend API. Check local server status and CORS.');
-      });
+    // Avoid probing protected endpoints from login screen.
+    setApiProbeOk(true);
+    setApiProbeMessage('Backend configured. Login to establish an authenticated session.');
   }, []);
 
   const {
