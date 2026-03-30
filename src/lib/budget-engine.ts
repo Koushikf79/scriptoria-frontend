@@ -8,6 +8,17 @@ const MARKET_MULTIPLIERS: Record<Market, { base: number; cast: number; vfx: numb
   general: { base: 5, cast: 6, vfx: 4, location: 3 },
 };
 
+const INR_TO_USD = 1 / 83;
+const INR_TO_KRW = 16.5;
+
+const MARKET_CURRENCY_CONVERSION: Record<Market, number> = {
+  telugu: 1,
+  bollywood: 1,
+  hollywood: INR_TO_USD,
+  korean: INR_TO_KRW,
+  general: INR_TO_USD,
+};
+
 export function simulateBudget(scenes: SceneData[], market: Market): BudgetSimulation {
   const config = MARKET_CONFIG[market];
   const mult = MARKET_MULTIPLIERS[market];
@@ -36,9 +47,19 @@ export function simulateBudget(scenes: SceneData[], market: Market): BudgetSimul
     marketing: Math.round(marketingBase * factor),
   });
 
-  const low = makeTier(0.6);
-  const mid = makeTier(1);
-  const high = makeTier(2.2);
+  const conversionFactor = MARKET_CURRENCY_CONVERSION[market];
+  const convertTier = (tier: ReturnType<typeof makeTier>) => ({
+    cast: Math.round(tier.cast * conversionFactor),
+    locations: Math.round(tier.locations * conversionFactor),
+    vfx: Math.round(tier.vfx * conversionFactor),
+    crew: Math.round(tier.crew * conversionFactor),
+    music: Math.round(tier.music * conversionFactor),
+    marketing: Math.round(tier.marketing * conversionFactor),
+  });
+
+  const low = convertTier(makeTier(0.6));
+  const mid = convertTier(makeTier(1));
+  const high = convertTier(makeTier(2.2));
 
   const sum = (o: Record<string, number>) => Object.values(o).reduce((a, b) => a + b, 0);
 

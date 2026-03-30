@@ -1,5 +1,7 @@
 import { ReactNode } from 'react';
 import { Film, BarChart3, Heart, DollarSign, Camera } from 'lucide-react';
+import { useAuth } from '@/store/authStore';
+import { useNavigate } from 'react-router-dom';
 
 interface ScriptoriaLayoutProps {
   children: ReactNode;
@@ -17,6 +19,9 @@ const NAV_ITEMS = [
 ];
 
 export default function ScriptoriaLayout({ children, activeTab, onTabChange, hasAnalysis }: ScriptoriaLayoutProps) {
+  const { isAuthenticated, user, logout } = useAuth();
+  const navigate = useNavigate();
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -26,9 +31,35 @@ export default function ScriptoriaLayout({ children, activeTab, onTabChange, has
             <Film className="h-7 w-7 text-primary" />
             <h1 className="text-xl font-display font-bold text-gradient-gold">SCRIPTORIA</h1>
           </div>
-          <p className="hidden md:block text-xs text-muted-foreground tracking-widest uppercase">
-            AI Pre-Production Intelligence
-          </p>
+          {isAuthenticated ? (
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => navigate('/dashboard')}
+                className="text-xs md:text-sm rounded-md border border-primary/40 px-3 py-1.5 text-primary hover:bg-primary/10 transition-all"
+              >
+                History
+              </button>
+              <div className="hidden sm:flex items-center gap-2 rounded-full border border-primary/30 px-2 py-1">
+                <span className="h-7 w-7 rounded-full bg-primary text-primary-foreground text-xs font-semibold grid place-items-center">
+                  {user?.fullName?.slice(0, 1).toUpperCase() || 'U'}
+                </span>
+                <span className="text-xs text-muted-foreground max-w-28 truncate">{user?.fullName || 'User'}</span>
+              </div>
+              <button
+                onClick={() => {
+                  logout();
+                  navigate('/login', { replace: true });
+                }}
+                className="text-xs md:text-sm rounded-md border border-primary/40 px-3 py-1.5 text-primary hover:bg-primary/10 transition-all"
+              >
+                Logout
+              </button>
+            </div>
+          ) : (
+            <p className="hidden md:block text-xs text-muted-foreground tracking-widest uppercase">
+              AI Pre-Production Intelligence
+            </p>
+          )}
         </div>
       </header>
 

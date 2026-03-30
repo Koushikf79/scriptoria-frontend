@@ -120,6 +120,34 @@
 }
 
 @layer utilities {
+  @keyframes scene-pulse {
+    0%, 100% { transform: scale(1); opacity: 0.7; }
+    50% { transform: scale(1.2); opacity: 1; }
+  }
+
+  @keyframes scene-shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-3px); }
+    75% { transform: translateX(3px); }
+  }
+
+  @keyframes scene-rise {
+    0% { transform: translateY(0); opacity: 0; }
+    15% { opacity: 0.9; }
+    100% { transform: translateY(-300px); opacity: 0; }
+  }
+
+  @keyframes scene-wave {
+    0% { transform: translateX(-8px) translateY(0); opacity: 0.35; }
+    50% { transform: translateX(8px) translateY(-4px); opacity: 0.55; }
+    100% { transform: translateX(-8px) translateY(0); opacity: 0.35; }
+  }
+
+  .scene-wave {
+    background: radial-gradient(circle at center, hsl(var(--primary) / 0.25), transparent 65%);
+    animation: scene-wave 5s ease-in-out infinite;
+  }
+
   .text-gradient-gold {
     background: linear-gradient(135deg, hsl(var(--gold-light)), hsl(var(--gold)), hsl(var(--gold-dark)));
     -webkit-background-clip: text;

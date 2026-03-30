@@ -2,14 +2,34 @@ import { ChangeEvent, useState } from 'react';
 import { Film, Loader2, Paperclip, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Progress } from '@/components/ui/progress';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { SAMPLE_SCREENPLAY } from '@/lib/mock-data';
+
+interface ProgressState {
+  stage: string;
+  percentage: number;
+  message: string;
+}
 
 interface HeroInputProps {
   onAnalyze: (script: string) => void;
   loading: boolean;
+  selectedMarket?: 'TOLLYWOOD' | 'BOLLYWOOD' | 'HOLLYWOOD' | 'KOREAN' | 'GENERAL';
+  onMarketChange?: (market: 'TOLLYWOOD' | 'BOLLYWOOD' | 'HOLLYWOOD' | 'KOREAN' | 'GENERAL') => void;
+  progress?: ProgressState | null;
+  error?: string | null;
 }
 
-export default function HeroInput({ onAnalyze, loading }: HeroInputProps) {
+export default function HeroInput({ 
+  onAnalyze, 
+  loading,
+  selectedMarket = 'TOLLYWOOD',
+  onMarketChange,
+  progress,
+  error,
+}: HeroInputProps) {
   const [script, setScript] = useState('');
   const [attachmentName, setAttachmentName] = useState('');
   const [readingAttachment, setReadingAttachment] = useState(false);
@@ -82,14 +102,55 @@ export default function HeroInput({ onAnalyze, loading }: HeroInputProps) {
 
       {/* Input */}
       <div className="w-full max-w-3xl space-y-4">
+        {error && (
+          <Alert variant="destructive">
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+        )}
+
         <div className="glass-card p-1">
           <Textarea
             placeholder="Paste your screenplay here..."
             className="min-h-[200px] bg-transparent border-0 resize-y text-sm focus-visible:ring-0 focus-visible:ring-offset-0"
             value={script}
             onChange={e => setScript(e.target.value)}
+            disabled={loading}
           />
         </div>
+
+        {/* Market Selector */}
+        <div className="flex items-center gap-3">
+          <label className="text-sm font-medium">Market:</label>
+          <Select
+            value={selectedMarket}
+            onValueChange={(value) => {
+              onMarketChange?.(value as 'TOLLYWOOD' | 'BOLLYWOOD' | 'HOLLYWOOD' | 'KOREAN' | 'GENERAL');
+            }}
+            disabled={loading}
+          >
+            <SelectTrigger className="w-64">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="TOLLYWOOD">Telugu / Tollywood</SelectItem>
+              <SelectItem value="BOLLYWOOD">Bollywood</SelectItem>
+              <SelectItem value="HOLLYWOOD">Hollywood</SelectItem>
+              <SelectItem value="KOREAN">Korean</SelectItem>
+              <SelectItem value="GENERAL">General</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Progress Bar */}
+        {progress && (
+          <div className="space-y-2">
+            <div className="flex justify-between text-sm">
+              <span className="font-medium">{progress.message}</span>
+              <span className="text-muted-foreground">{progress.percentage}%</span>
+            </div>
+            <Progress value={progress.percentage} className="h-2" />
+          </div>
+        )}
 
         <div className="flex items-center gap-3 flex-wrap">
           <Button

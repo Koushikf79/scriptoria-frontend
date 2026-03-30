@@ -109,6 +109,7 @@ export default function SceneAnalysisPanel({ scenes, onSelectScene }: SceneAnaly
           </div>
         ))}
       </div>
+
     </div>
   );
 }
